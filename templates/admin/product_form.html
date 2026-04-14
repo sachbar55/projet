@@ -1,0 +1,142 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{% if product %}Modifier{% else %}Ajouter{% endif %} un produit – Admin{% endblock %}
+{% block page_title %}{% if product %}Modifier le produit{% else %}Ajouter un produit{% endif %}{% endblock %}
+
+{% block content %}
+<div class="admin-card-header-standalone">
+  <div>
+    <h2>{% if product %}Modifier: {{ product.name }}{% else %}Nouveau Produit{% endif %}</h2>
+  </div>
+  <a href="{{ url_for('admin_products') }}" class="btn btn-outline">
+    <i class="fas fa-arrow-left"></i> Retour
+  </a>
+</div>
+
+<div class="admin-card mt-3">
+  <form action="{% if product %}{{ url_for('admin_product_edit', product_id=product.id) }}{% else %}{{ url_for('admin_product_add') }}{% endif %}"
+        method="post" enctype="multipart/form-data" class="product-form">
+
+    <div class="form-grid">
+      <!-- Left Column -->
+      <div class="form-column">
+        <div class="form-group">
+          <label for="name"><i class="fas fa-tag"></i> Nom du produit *</label>
+          <input type="text" id="name" name="name" required
+                 value="{{ product.name if product else '' }}"
+                 placeholder="Ex: Smartphone Premium X1">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price"><i class="fas fa-euro-sign"></i> Prix (€) *</label>
+            <input type="number" id="price" name="price" step="0.01" min="0" required
+                   value="{{ product.price if product else '' }}"
+                   placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label for="category_id"><i class="fas fa-folder"></i> Catégorie</label>
+            <select id="category_id" name="category_id">
+              <option value="">-- Aucune catégorie --</option>
+              {% for cat in categories %}
+              <option value="{{ cat.id }}"
+                {% if product and product.category_id == cat.id %}selected{% endif %}>
+                {{ cat.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description"><i class="fas fa-align-left"></i> Description</label>
+          <textarea id="description" name="description" rows="6"
+                    placeholder="Décrivez le produit en détail...">{{ product.description if product else '' }}</textarea>
+        </div>
+
+        <div class="form-row checkboxes-row">
+          <label class="checkbox-label">
+            <input type="checkbox" name="featured" value="1"
+                   {% if product and product.featured %}checked{% endif %}>
+            <span class="checkbox-custom"></span>
+            <i class="fas fa-star"></i> Produit en vedette
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="in_stock" value="1"
+                   {% if not product or product.in_stock %}checked{% endif %}>
+            <span class="checkbox-custom"></span>
+            <i class="fas fa-check-circle"></i> En stock
+          </label>
+        </div>
+      </div>
+
+      <!-- Right Column – Image -->
+      <div class="form-column">
+        <div class="form-group">
+          <label><i class="fas fa-image"></i> Image du produit</label>
+          <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+            <div class="upload-placeholder" id="uploadPlaceholder">
+              {% if product and product.image_filename %}
+              <img src="{{ product.image_url() }}" alt="Image actuelle" id="imagePreview" style="max-width:100%;max-height:250px;border-radius:8px;">
+              <p class="upload-hint">Cliquer pour changer l'image</p>
+              {% else %}
+              <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+              <p>Cliquez ou glissez une image ici</p>
+              <p class="upload-hint">PNG, JPG, JPEG, GIF, WEBP (max 16 MB)</p>
+              {% endif %}
+            </div>
+            <input type="file" id="imageInput" name="image" accept="image/*" style="display:none"
+                   onchange="previewImage(this)">
+          </div>
+        </div>
+
+        {% if product and product.image_filename %}
+        <div class="current-image-info">
+          <i class="fas fa-info-circle"></i>
+          Image actuelle: <code>{{ product.image_filename }}</code>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-submit-row">
+      <a href="{{ url_for('admin_products') }}" class="btn btn-outline">
+        <i class="fas fa-times"></i> Annuler
+      </a>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        {% if product %}Enregistrer les modifications{% else %}Ajouter le produit{% endif %}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const placeholder = document.getElementById('uploadPlaceholder');
+    placeholder.innerHTML = `
+      <img src="${e.target.result}" style="max-width:100%;max-height:250px;border-radius:8px;" alt="Aperçu">
+      <p class="upload-hint">Cliquer pour changer l'image</p>
+    `;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag & drop support
+const area = document.getElementById('imageUploadArea');
+area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+area.addEventListener('drop', e => {
+  e.preventDefault();
+  area.classList.remove('drag-over');
+  const input = document.getElementById('imageInput');
+  input.files = e.dataTransfer.files;
+  previewImage(input);
+});
+</script>
+{% endblock %}

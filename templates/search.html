@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Recherche{% if query %}: {{ query }}{% endif %} – MarketPro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1 class="page-title">
+      <i class="fas fa-search"></i>
+      {% if query %}Résultats pour "{{ query }}"{% else %}Tous les Produits{% endif %}
+    </h1>
+    <p class="page-subtitle">
+      {% if products %}{{ products|length }} produit{{ 's' if products|length != 1 else '' }} trouvé{{ 's' if products|length != 1 else '' }}{% else %}Aucun résultat{% endif %}
+    </p>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <!-- Search + Filter Panel -->
+    <div class="search-panel">
+      <form action="{{ url_for('search') }}" method="get" class="search-filters-form">
+        <div class="search-input-group">
+          <i class="fas fa-search"></i>
+          <input type="text" name="q" placeholder="Rechercher..." value="{{ query }}">
+        </div>
+        <div class="filter-group">
+          <select name="cat">
+            <option value="">Toutes les catégories</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_cat == cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="filter-group price-range">
+          <input type="number" name="min_price" placeholder="Prix min" value="{{ min_price }}" min="0" step="0.01">
+          <span>–</span>
+          <input type="number" name="max_price" placeholder="Prix max" value="{{ max_price }}" min="0" step="0.01">
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-filter"></i> Filtrer
+        </button>
+        {% if query or selected_cat or min_price or max_price %}
+        <a href="{{ url_for('search') }}" class="btn btn-outline">
+          <i class="fas fa-times"></i> Réinitialiser
+        </a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Category Chips -->
+    <div class="filter-bar">
+      <a href="{{ url_for('search') }}" class="filter-chip {% if not selected_cat %}active{% endif %}">
+        <i class="fas fa-th-large"></i> Tous
+      </a>
+      {% for cat in categories %}
+      <a href="{{ url_for('search') }}?cat={{ cat.id }}{% if query %}&q={{ query }}{% endif %}"
+         class="filter-chip {% if selected_cat == cat.id|string %}active{% endif %}">
+        <i class="fas fa-{{ cat.icon }}"></i> {{ cat.name }}
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if products %}
+    <div class="products-grid" id="productsGrid">
+      {% for product in products %}
+      <article class="product-card" data-delay="{{ loop.index0 * 60 }}">
+        {% if product.featured %}
+        <div class="product-badge featured-badge">
+          <i class="fas fa-star"></i>
+        </div>
+        {% endif %}
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-image-wrap">
+          <img src="{{ product.image_url() }}" alt="{{ product.name }}" class="product-image" loading="lazy">
+          <div class="product-overlay">
+            <span><i class="fas fa-eye"></i> Voir les détails</span>
+          </div>
+        </a>
+        <div class="product-body">
+          {% if product.category %}
+          <span class="product-category">{{ product.category.name }}</span>
+          {% endif %}
+          <h3 class="product-name">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a>
+          </h3>
+          <p class="product-desc">{{ product.description[:90] }}{% if product.description|length > 90 %}…{% endif %}</p>
+          <div class="product-footer">
+            <span class="product-price">{{ "%.2f"|format(product.price) }} €</span>
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-sm">Détails</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-container">
+      <div class="empty-icon"><i class="fas fa-search"></i></div>
+      <h3>Aucun produit trouvé</h3>
+      <p>Essayez d'autres mots-clés ou explorez nos catégories.</p>
+      <a href="{{ url_for('search') }}" class="btn btn-primary">Voir tous les produits</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
