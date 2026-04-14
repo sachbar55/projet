@@ -1,0 +1,149 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Catégories – Admin{% endblock %}
+{% block page_title %}Gestion des Catégories{% endblock %}
+
+{% block content %}
+<div class="admin-row">
+  <!-- Category List -->
+  <div class="admin-col-wide">
+    <div class="admin-card-header-standalone">
+      <h2>Catégories <span class="badge badge-blue">{{ categories|length }}</span></h2>
+    </div>
+    <div class="admin-card mt-3">
+      {% if categories %}
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Icône</th>
+              <th>Nom</th>
+              <th>Description</th>
+              <th>Produits</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cat in categories %}
+            <tr>
+              <td>
+                <div class="cat-icon-table">
+                  <i class="fas fa-{{ cat.icon }}"></i>
+                </div>
+              </td>
+              <td><strong>{{ cat.name }}</strong></td>
+              <td>{{ cat.description[:60] }}{% if cat.description|length > 60 %}…{% endif %}</td>
+              <td><span class="badge badge-blue">{{ cat.product_count() }}</span></td>
+              <td><small>{{ cat.created_at.strftime('%d/%m/%Y') }}</small></td>
+              <td class="table-actions">
+                <!-- Edit button triggers modal -->
+                <button class="btn btn-sm btn-warning" onclick="openEditModal({{ cat.id }}, '{{ cat.name }}', '{{ cat.description }}', '{{ cat.icon }}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <form action="{{ url_for('admin_category_delete', cat_id=cat.id) }}" method="post" style="display:inline"
+                      onsubmit="return confirm('Supprimer la catégorie «{{ cat.name }}»? Les produits associés seront désassociés.')">
+                  <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center text-muted py-4">
+        <i class="fas fa-tags fa-2x mb-2"></i><br>Aucune catégorie.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Add Category Form -->
+  <div class="admin-col-narrow">
+    <div class="admin-card-header-standalone">
+      <h2>Ajouter une catégorie</h2>
+    </div>
+    <div class="admin-card mt-3">
+      <form action="{{ url_for('admin_category_add') }}" method="post">
+        <div class="form-group">
+          <label for="cat_name"><i class="fas fa-font"></i> Nom *</label>
+          <input type="text" id="cat_name" name="name" required placeholder="Ex: Électronique">
+        </div>
+        <div class="form-group">
+          <label for="cat_desc"><i class="fas fa-align-left"></i> Description</label>
+          <textarea id="cat_desc" name="description" rows="3" placeholder="Description de la catégorie..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="cat_icon"><i class="fas fa-icons"></i> Icône FontAwesome</label>
+          <div class="icon-input-wrap">
+            <span class="icon-preview" id="iconPreview"><i class="fas fa-tag"></i></span>
+            <input type="text" id="cat_icon" name="icon" value="tag" placeholder="Ex: laptop, tshirt, home"
+                   oninput="updateIconPreview(this.value)">
+          </div>
+          <small class="text-muted">Exemples: laptop, tshirt, home, futbol, car, mobile-alt, gem, leaf</small>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">
+          <i class="fas fa-plus"></i> Ajouter la catégorie
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal" onclick="closeEditModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fas fa-edit"></i> Modifier la catégorie</h3>
+      <button class="modal-close" onclick="document.getElementById('editModal').style.display='none'">&times;</button>
+    </div>
+    <form id="editCatForm" method="post">
+      <div class="form-group">
+        <label>Nom *</label>
+        <input type="text" name="name" id="editCatName" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" id="editCatDesc" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Icône</label>
+        <div class="icon-input-wrap">
+          <span class="icon-preview" id="editIconPreview"><i class="fas fa-tag"></i></span>
+          <input type="text" name="icon" id="editCatIcon" oninput="updateEditIconPreview(this.value)">
+        </div>
+      </div>
+      <div class="form-submit-row">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('editModal').style.display='none'">Annuler</button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateIconPreview(val) {
+  document.getElementById('iconPreview').innerHTML = `<i class="fas fa-${val || 'tag'}"></i>`;
+}
+function updateEditIconPreview(val) {
+  document.getElementById('editIconPreview').innerHTML = `<i class="fas fa-${val || 'tag'}"></i>`;
+}
+function openEditModal(id, name, desc, icon) {
+  document.getElementById('editCatForm').action = `/admin/categories/edit/${id}`;
+  document.getElementById('editCatName').value = name;
+  document.getElementById('editCatDesc').value = desc;
+  document.getElementById('editCatIcon').value = icon;
+  updateEditIconPreview(icon);
+  document.getElementById('editModal').style.display = 'flex';
+}
+function closeEditModal(e) {
+  if (e.target === document.getElementById('editModal')) {
+    document.getElementById('editModal').style.display = 'none';
+  }
+}
+</script>
+{% endblock %}
