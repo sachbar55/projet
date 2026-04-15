@@ -1,0 +1,146 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Dashboard – Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon"><i class="fas fa-box"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.total_products }}</span>
+      <span class="stat-label">Total Produits</span>
+    </div>
+  </div>
+  <div class="stat-card stat-purple">
+    <div class="stat-icon"><i class="fas fa-tags"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.total_categories }}</span>
+      <span class="stat-label">Catégories</span>
+    </div>
+  </div>
+  <div class="stat-card stat-orange">
+    <div class="stat-icon"><i class="fas fa-star"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.featured_products }}</span>
+      <span class="stat-label">En Vedette</span>
+    </div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">{{ stats.out_of_stock }}</span>
+      <span class="stat-label">Rupture de Stock</span>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="admin-row">
+  <div class="admin-col">
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h3><i class="fas fa-bolt"></i> Actions Rapides</h3>
+      </div>
+      <div class="quick-actions">
+        <a href="{{ url_for('admin_product_add') }}" class="quick-action-btn">
+          <i class="fas fa-plus-circle"></i>
+          <span>Ajouter un Produit</span>
+        </a>
+        <a href="{{ url_for('admin_categories') }}" class="quick-action-btn">
+          <i class="fas fa-folder-plus"></i>
+          <span>Gérer les Catégories</span>
+        </a>
+        <a href="{{ url_for('admin_products') }}" class="quick-action-btn">
+          <i class="fas fa-list"></i>
+          <span>Voir tous les Produits</span>
+        </a>
+        <a href="{{ url_for('index') }}" class="quick-action-btn" target="_blank">
+          <i class="fas fa-eye"></i>
+          <span>Voir le Site Public</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories Overview -->
+  <div class="admin-col">
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h3><i class="fas fa-chart-pie"></i> Catégories</h3>
+        <a href="{{ url_for('admin_categories') }}" class="btn btn-sm btn-primary">Gérer</a>
+      </div>
+      <div class="category-list-dashboard">
+        {% for cat in categories %}
+        <div class="cat-row">
+          <div class="cat-icon-wrap">
+            <i class="fas fa-{{ cat.icon }}"></i>
+          </div>
+          <div class="cat-info">
+            <span class="cat-name">{{ cat.name }}</span>
+          </div>
+          <span class="cat-badge">{{ cat.product_count() }}</span>
+        </div>
+        {% else %}
+        <p class="text-muted">Aucune catégorie.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Products Table -->
+<div class="admin-card mt-4">
+  <div class="admin-card-header">
+    <h3><i class="fas fa-clock"></i> Produits Récents</h3>
+    <a href="{{ url_for('admin_products') }}" class="btn btn-sm btn-primary">Voir tout</a>
+  </div>
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Nom</th>
+          <th>Catégorie</th>
+          <th>Prix</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in recent_products %}
+        <tr>
+          <td>
+            <img src="{{ product.image_url() }}" alt="{{ product.name }}" class="table-product-img">
+          </td>
+          <td>
+            <strong>{{ product.name }}</strong>
+            {% if product.featured %}
+            <span class="badge badge-orange ms-1"><i class="fas fa-star"></i></span>
+            {% endif %}
+          </td>
+          <td>{{ product.category.name if product.category else '–' }}</td>
+          <td><strong>{{ "%.2f"|format(product.price) }} €</strong></td>
+          <td>
+            <span class="status-badge {% if product.in_stock %}status-active{% else %}status-inactive{% endif %}">
+              {{ 'En stock' if product.in_stock else 'Rupture' }}
+            </span>
+          </td>
+          <td class="table-actions">
+            <a href="{{ url_for('admin_product_edit', product_id=product.id) }}" class="btn btn-sm btn-warning">
+              <i class="fas fa-edit"></i>
+            </a>
+            <form action="{{ url_for('admin_product_delete', product_id=product.id) }}" method="post" style="display:inline"
+                  onsubmit="return confirm('Supprimer ce produit?')">
+              <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted">Aucun produit.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

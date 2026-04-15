@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} – MarketPro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Accueil</a>
+      <i class="fas fa-chevron-right"></i>
+      {% if product.category %}
+      <a href="{{ url_for('category', cat_id=product.category_id) }}">{{ product.category.name }}</a>
+      <i class="fas fa-chevron-right"></i>
+      {% endif %}
+      <span>{{ product.name }}</span>
+    </nav>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="product-detail-grid">
+      <!-- Image -->
+      <div class="product-detail-image-wrap">
+        {% if product.images|length > 1 %}
+        <div class="carousel-container" id="productCarousel">
+          <img src="{{ url_for('static', filename='uploads/' + product.images[0].filename) }}"
+               alt="{{ product.name }}" class="carousel-main-image" id="carouselMainImage">
+          <div class="carousel-controls">
+            <button class="carousel-btn" id="carouselPrev" aria-label="Image précédente">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-btn" id="carouselNext" aria-label="Image suivante">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          {% if product.featured %}
+          <div class="product-badge featured-badge lg">
+            <i class="fas fa-star"></i> En vedette
+          </div>
+          {% endif %}
+          {% if not product.in_stock %}
+          <div class="product-badge stock-badge">Rupture de stock</div>
+          {% endif %}
+          <div class="carousel-thumbnails" id="carouselThumbs">
+            {% for img in product.images %}
+            <img src="{{ url_for('static', filename='uploads/' + img.filename) }}"
+                 alt="Image {{ loop.index }}"
+                 class="carousel-thumb {% if loop.first %}active{% endif %}"
+                 data-index="{{ loop.index0 }}"
+                 onclick="goToSlide({{ loop.index0 }})">
+            {% endfor %}
+          </div>
+          <div class="carousel-dots" id="carouselDots">
+            {% for img in product.images %}
+            <button class="carousel-dot {% if loop.first %}active{% endif %}"
+                    data-index="{{ loop.index0 }}"
+                    onclick="goToSlide({{ loop.index0 }})" aria-label="Image {{ loop.index }}"></button>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="product-detail-image-container">
+          <img src="{{ product.image_url() }}" alt="{{ product.name }}" class="product-detail-image" id="mainImage">
+          {% if product.featured %}
+          <div class="product-badge featured-badge lg">
+            <i class="fas fa-star"></i> En vedette
+          </div>
+          {% endif %}
+          {% if not product.in_stock %}
+          <div class="product-badge stock-badge">Rupture de stock</div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Info -->
+      <div class="product-detail-info">
+        {% if product.category %}
+        <a href="{{ url_for('category', cat_id=product.category_id) }}" class="product-category-link">
+          <i class="fas fa-tag"></i> {{ product.category.name }}
+        </a>
+        {% endif %}
+        <h1 class="product-detail-name">{{ product.name }}</h1>
+        <div class="product-detail-price-wrap">
+          <span class="product-detail-price">{{ "%.2f"|format(product.price) }} €</span>
+          {% if product.in_stock %}
+          <span class="stock-badge-inline in-stock">
+            <i class="fas fa-check-circle"></i> En stock
+          </span>
+          {% else %}
+          <span class="stock-badge-inline out-stock">
+            <i class="fas fa-times-circle"></i> Rupture de stock
+          </span>
+          {% endif %}
+        </div>
+        <div class="product-detail-divider"></div>
+        <div class="product-detail-description">
+          <h3>Description</h3>
+          <p>{{ product.description or "Aucune description disponible." }}</p>
+        </div>
+        <div class="product-detail-meta">
+          <div class="meta-item">
+            <i class="fas fa-calendar"></i>
+            <span>Ajouté le {{ product.created_at.strftime('%d/%m/%Y') }}</span>
+          </div>
+          {% if product.category %}
+          <div class="meta-item">
+            <i class="fas fa-folder"></i>
+            <span>{{ product.category.name }}</span>
+          </div>
+          {% endif %}
+          {% if product.images|length > 1 %}
+          <div class="meta-item">
+            <i class="fas fa-images"></i>
+            <span>{{ product.images|length }} photos</span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="product-detail-actions">
+          <a href="{{ url_for('search') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Retour aux produits
+          </a>
+          {% if product.category %}
+          <a href="{{ url_for('category', cat_id=product.category_id) }}" class="btn btn-primary">
+            <i class="fas fa-th-large"></i> Voir la catégorie
+          </a>
+          {% endif %}
+        </div>
+        <!-- Share -->
+        <div class="product-share">
+          <span>Partager:</span>
+          <a href="https://wa.me/?text={{ product.name | urlencode }}%20-%20{{ product.price }}€" target="_blank" class="share-btn whatsapp">
+            <i class="fab fa-whatsapp"></i>
+          </a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url | urlencode }}" target="_blank" class="share-btn facebook">
+            <i class="fab fa-facebook-f"></i>
+          </a>
+          <a href="https://twitter.com/intent/tweet?text={{ product.name | urlencode }}&url={{ request.url | urlencode }}" target="_blank" class="share-btn twitter">
+            <i class="fab fa-twitter"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related %}
+    <div class="section-header mt-6">
+      <span class="section-badge">Similaires</span>
+      <h2 class="section-title">Produits Similaires</h2>
+    </div>
+    <div class="products-grid">
+      {% for p in related %}
+      <article class="product-card" data-delay="{{ loop.index0 * 80 }}">
+        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="product-image-wrap">
+          <img src="{{ p.image_url() }}" alt="{{ p.name }}" class="product-image" loading="lazy">
+          <div class="product-overlay">
+            <span><i class="fas fa-eye"></i> Voir les détails</span>
+          </div>
+        </a>
+        <div class="product-body">
+          <h3 class="product-name">
+            <a href="{{ url_for('product_detail', product_id=p.id) }}">{{ p.name }}</a>
+          </h3>
+          <div class="product-footer">
+            <span class="product-price">{{ "%.2f"|format(p.price) }} €</span>
+            <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn btn-primary btn-sm">Détails</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% if product.images|length > 1 %}
+<script>
+(function() {
+  var images = [
+    {% for img in product.images %}
+    "{{ url_for('static', filename='uploads/' + img.filename) }}"{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  var current = 0;
+  var total = images.length;
+  var mainImg = document.getElementById('carouselMainImage');
+  var thumbs = document.querySelectorAll('.carousel-thumb');
+  var dots = document.querySelectorAll('.carousel-dot');
+  var autoSlideTimer;
+
+  function goTo(index) {
+    current = (index + total) % total;
+    mainImg.src = images[current];
+    thumbs.forEach(function(t, i) { t.classList.toggle('active', i === current); });
+    dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
+    resetAutoSlide();
+  }
+
+  window.goToSlide = goTo;
+
+  document.getElementById('carouselPrev').addEventListener('click', function() { goTo(current - 1); });
+  document.getElementById('carouselNext').addEventListener('click', function() { goTo(current + 1); });
+
+  function resetAutoSlide() {
+    clearInterval(autoSlideTimer);
+    autoSlideTimer = setInterval(function() { goTo(current + 1); }, 4000);
+  }
+
+  resetAutoSlide();
+
+  var carousel = document.getElementById('productCarousel');
+  carousel.addEventListener('mouseenter', function() { clearInterval(autoSlideTimer); });
+  carousel.addEventListener('mouseleave', function() { resetAutoSlide(); });
+})();
+</script>
+{% endif %}
+{% endblock %}

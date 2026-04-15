@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}MarketPro – Bienvenue{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-shape hero-shape-1"></div>
+    <div class="hero-shape hero-shape-2"></div>
+    <div class="hero-shape hero-shape-3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="fas fa-star"></i> Nouveautés & Tendances
+    </div>
+    <h1 class="hero-title">Découvrez Nos <span class="highlight">Produits</span> Exceptionnels</h1>
+    <p class="hero-subtitle">Une sélection de produits premium pour tous vos besoins. Qualité, style et innovation réunis.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('search') }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-shopping-bag"></i> Explorer les produits
+      </a>
+      <a href="#categories" class="btn btn-outline btn-lg">
+        <i class="fas fa-th-large"></i> Voir les catégories
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hero-stat-number">{{ total_products }}</span>
+        <span class="hero-stat-label">Produits</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-number">{{ categories|length }}</span>
+        <span class="hero-stat-label">Catégories</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-number">100%</span>
+        <span class="hero-stat-label">Qualité</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <a href="#categories"><i class="fas fa-chevron-down"></i></a>
+  </div>
+</section>
+
+<!-- Categories Section -->
+<section class="section" id="categories">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-badge">Explorer</span>
+      <h2 class="section-title">Nos Catégories</h2>
+      <p class="section-subtitle">Trouvez exactement ce que vous cherchez</p>
+    </div>
+    <div class="categories-grid">
+      {% for cat in categories %}
+      <a href="{{ url_for('category', cat_id=cat.id) }}" class="category-card" data-delay="{{ loop.index0 * 100 }}">
+        <div class="category-icon">
+          <i class="fas fa-{{ cat.icon }}"></i>
+        </div>
+        <div class="category-info">
+          <h3>{{ cat.name }}</h3>
+          <span class="category-count">{{ cat.product_count() }} produits</span>
+        </div>
+        <div class="category-arrow">
+          <i class="fas fa-arrow-right"></i>
+        </div>
+      </a>
+      {% else %}
+      <p class="empty-state">Aucune catégorie disponible.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Products -->
+{% if featured %}
+<section class="section section-dark" id="featured">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-badge">Sélection</span>
+      <h2 class="section-title">Produits en Vedette</h2>
+      <p class="section-subtitle">Nos meilleures offres sélectionnées pour vous</p>
+    </div>
+    <div class="products-grid">
+      {% for product in featured %}
+      <article class="product-card" data-delay="{{ loop.index0 * 80 }}">
+        <div class="product-badge featured-badge">
+          <i class="fas fa-star"></i> En vedette
+        </div>
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-image-wrap">
+          <img src="{{ product.image_url() }}" alt="{{ product.name }}" class="product-image" loading="lazy">
+          <div class="product-overlay">
+            <span><i class="fas fa-eye"></i> Voir les détails</span>
+          </div>
+        </a>
+        <div class="product-body">
+          {% if product.category %}
+          <span class="product-category">{{ product.category.name }}</span>
+          {% endif %}
+          <h3 class="product-name">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a>
+          </h3>
+          <p class="product-desc">{{ product.description[:100] }}{% if product.description|length > 100 %}…{% endif %}</p>
+          <div class="product-footer">
+            <span class="product-price">{{ "%.2f"|format(product.price) }} €</span>
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-info-circle"></i> Détails
+            </a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Latest Products -->
+{% if latest %}
+<section class="section" id="latest">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-badge">Récents</span>
+      <h2 class="section-title">Derniers Ajouts</h2>
+      <p class="section-subtitle">Découvrez nos nouveaux produits</p>
+    </div>
+    <div class="products-grid">
+      {% for product in latest %}
+      <article class="product-card" data-delay="{{ loop.index0 * 80 }}">
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-image-wrap">
+          <img src="{{ product.image_url() }}" alt="{{ product.name }}" class="product-image" loading="lazy">
+          <div class="product-overlay">
+            <span><i class="fas fa-eye"></i> Voir les détails</span>
+          </div>
+        </a>
+        <div class="product-body">
+          {% if product.category %}
+          <span class="product-category">{{ product.category.name }}</span>
+          {% endif %}
+          <h3 class="product-name">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a>
+          </h3>
+          <p class="product-desc">{{ product.description[:100] }}{% if product.description|length > 100 %}…{% endif %}</p>
+          <div class="product-footer">
+            <span class="product-price">{{ "%.2f"|format(product.price) }} €</span>
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-sm">
+              <i class="fas fa-info-circle"></i> Détails
+            </a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="section-cta">
+      <a href="{{ url_for('search') }}" class="btn btn-outline btn-lg">
+        <i class="fas fa-th-large"></i> Voir tous les produits
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Why Choose Us -->
+<section class="section section-accent">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Pourquoi Nous Choisir?</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-medal"></i></div>
+        <h3>Qualité Premium</h3>
+        <p>Chaque produit est soigneusement sélectionné pour sa qualité exceptionnelle.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-tags"></i></div>
+        <h3>Meilleurs Prix</h3>
+        <p>Des prix compétitifs sur tous nos produits, accessibles à tous.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-headset"></i></div>
+        <h3>Support 24/7</h3>
+        <p>Notre équipe est disponible pour répondre à toutes vos questions.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Garantie Qualité</h3>
+        <p>Tous nos produits sont garantis et certifiés conformes aux normes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
