@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} – MarketPro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <nav class="breadcrumb">
+      <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Accueil</a>
+      <i class="fas fa-chevron-right"></i>
+      <span>{{ category.name }}</span>
+    </nav>
+    <h1 class="page-title">
+      <i class="fas fa-{{ category.icon }}"></i> {{ category.name }}
+    </h1>
+    {% if category.description %}
+    <p class="page-subtitle">{{ category.description }}</p>
+    {% endif %}
+    <span class="product-count-badge">{{ products|length }} produit{{ 's' if products|length != 1 else '' }}</span>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <!-- Categories Filter Bar -->
+    <div class="filter-bar">
+      <a href="{{ url_for('search') }}" class="filter-chip">
+        <i class="fas fa-th-large"></i> Tous
+      </a>
+      {% for cat in categories %}
+      <a href="{{ url_for('category', cat_id=cat.id) }}"
+         class="filter-chip {% if cat.id == category.id %}active{% endif %}">
+        <i class="fas fa-{{ cat.icon }}"></i> {{ cat.name }}
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if products %}
+    <div class="products-grid" id="productsGrid">
+      {% for product in products %}
+      <article class="product-card" data-delay="{{ loop.index0 * 80 }}">
+        {% if product.featured %}
+        <div class="product-badge featured-badge">
+          <i class="fas fa-star"></i>
+        </div>
+        {% endif %}
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-image-wrap">
+          <img src="{{ product.image_url() }}" alt="{{ product.name }}" class="product-image" loading="lazy">
+          <div class="product-overlay">
+            <span><i class="fas fa-eye"></i> Voir les détails</span>
+          </div>
+        </a>
+        <div class="product-body">
+          <h3 class="product-name">
+            <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a>
+          </h3>
+          <p class="product-desc">{{ product.description[:90] }}{% if product.description|length > 90 %}…{% endif %}</p>
+          <div class="product-footer">
+            <span class="product-price">{{ "%.2f"|format(product.price) }} €</span>
+            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary btn-sm">Détails</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-container">
+      <div class="empty-icon"><i class="fas fa-box-open"></i></div>
+      <h3>Aucun produit dans cette catégorie</h3>
+      <p>Revenez bientôt, de nouveaux produits seront bientôt ajoutés.</p>
+      <a href="{{ url_for('index') }}" class="btn btn-primary">Retour à l'accueil</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
