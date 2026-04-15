@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Produits</title>
+  <link rel="stylesheet" href="/frontend/style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>🛍️ Nos Produits</h1>
+  </header>
+
+  <main>
+    <!-- Formulaire d'ajout -->
+    <section id="add-section">
+      <h2>Ajouter un produit</h2>
+      <form id="product-form">
+        <label>Nom
+          <input type="text" id="form-name" required />
+        </label>
+        <label>Description
+          <textarea id="form-desc"></textarea>
+        </label>
+        <label>Prix (€)
+          <input type="number" id="form-price" step="0.01" min="0" required />
+        </label>
+        <label>Photos (plusieurs possibles)
+          <input type="file" id="form-photos" accept="image/*" multiple required />
+        </label>
+        <div id="photo-preview"></div>
+        <button type="submit">Ajouter le produit</button>
+      </form>
+    </section>
+
+    <!-- Grille de produits -->
+    <section id="products-section">
+      <h2>Liste des produits</h2>
+      <div id="products-grid"></div>
+    </section>
+  </main>
+
+  <script src="/frontend/app.js"></script>
+</body>
+</html>
