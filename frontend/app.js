@@ -114,11 +114,21 @@ function createCard(product) {
   // Card body
   const body = document.createElement('div');
   body.className = 'card-body';
-  body.innerHTML = `
-    <h3>${escapeHtml(product.name)}</h3>
-    <p class="description">${escapeHtml(product.description)}</p>
-    <p class="price">${Number(product.price).toFixed(2)} €</p>
-  `;
+
+  const h3 = document.createElement('h3');
+  h3.textContent = product.name;
+  body.appendChild(h3);
+
+  const desc = document.createElement('p');
+  desc.className = 'description';
+  desc.textContent = product.description;
+  body.appendChild(desc);
+
+  const price = document.createElement('p');
+  price.className = 'price';
+  price.textContent = Number(product.price).toFixed(2) + ' €';
+  body.appendChild(price);
+
   card.appendChild(body);
 
   // Actions
@@ -148,6 +158,7 @@ const photosInput = document.getElementById('form-photos');
 const preview = document.getElementById('photo-preview');
 
 photosInput.addEventListener('change', () => {
+  revokePreviewUrls();
   preview.innerHTML = '';
   Array.from(photosInput.files).forEach(file => {
     const img = document.createElement('img');
@@ -172,6 +183,7 @@ form.addEventListener('submit', async (e) => {
 
   if (res.ok) {
     form.reset();
+    revokePreviewUrls();
     preview.innerHTML = '';
     loadProducts();
   } else {
@@ -180,10 +192,10 @@ form.addEventListener('submit', async (e) => {
 });
 
 // ===== Helpers =====
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text || '';
-  return div.innerHTML;
+function revokePreviewUrls() {
+  preview.querySelectorAll('img').forEach(img => {
+    if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  });
 }
 
 // ===== Init =====

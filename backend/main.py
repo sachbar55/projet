@@ -1,4 +1,6 @@
 import os
+import re
+import shutil
 import uuid
 import json
 from pathlib import Path
@@ -7,6 +9,9 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+
+UUID_RE = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'}
 
 app = FastAPI()
 
@@ -47,8 +52,21 @@ async def get_products():
     return load_products()
 
 
+def validate_product_id(product_id: str) -> None:
+    if not UUID_RE.match(product_id):
+        raise HTTPException(status_code=400, detail="Identifiant de produit invalide")
+
+
+def sanitize_extension(filename: str) -> str:
+    ext = Path(filename).suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        ext = '.jpg'
+    return ext
+
+
 @app.get("/api/products/{product_id}")
 async def get_product(product_id: str):
+    validate_product_id(product_id)
     products = load_products()
     for p in products:
         if p["id"] == product_id:
@@ -69,7 +87,7 @@ async def create_product(
 
     photo_paths: list[str] = []
     for photo in photos:
-        ext = Path(photo.filename or "img.jpg").suffix or ".jpg"
+        ext = sanitize_extension(photo.filename or "img.jpg")
         filename = f"{uuid.uuid4().hex}{ext}"
         file_path = product_dir / filename
         content = await photo.read()
@@ -99,6 +117,7 @@ async def update_product(
     price: float = Form(...),
     photos: list[UploadFile] = File(None),
 ):
+    validate_product_id(product_id)
     products = load_products()
     product = None
     for p in products:
@@ -112,12 +131,12 @@ async def update_product(
     product["description"] = description
     product["price"] = price
 
-    if photos and photos[0].filename:
+    if photos and len(photos) > 0 and photos[0].filename:
         product_dir = UPLOAD_DIR / product_id
         product_dir.mkdir(exist_ok=True)
         photo_paths: list[str] = []
         for photo in photos:
-            ext = Path(photo.filename or "img.jpg").suffix or ".jpg"
+            ext = sanitize_extension(photo.filename or "img.jpg")
             filename = f"{uuid.uuid4().hex}{ext}"
             file_path = product_dir / filename
             content = await photo.read()
@@ -131,12 +150,12 @@ async def update_product(
 
 @app.delete("/api/products/{product_id}")
 async def delete_product(product_id: str):
+    validate_product_id(product_id)
     products = load_products()
     new_products = [p for p in products if p["id"] != product_id]
     if len(new_products) == len(products):
         raise HTTPException(status_code=404, detail="Produit introuvable")
 
-    import shutil
     product_dir = UPLOAD_DIR / product_id
     if product_dir.exists():
         shutil.rmtree(product_dir)
