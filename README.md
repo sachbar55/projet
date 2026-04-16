@@ -86,7 +86,7 @@ Render.com offre un hébergement gratuit pour les applications web Python. C'est
 Assurez-vous que votre code est poussé sur GitHub avec les fichiers suivants à la racine :
 - `app.py` – Application principale
 - `requirements.txt` – Dépendances Python
-- `Procfile` – Commande de démarrage
+- `Procfile` – Command de démarrage
 - `render.yaml` – Configuration Render
 - `runtime.txt` – Version Python
 
